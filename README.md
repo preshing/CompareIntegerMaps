@@ -2,6 +2,8 @@ This project generates benchmark data for two different data structures, then re
 
 Each data structure is an associative map (aka [associative array](http://en.wikipedia.org/wiki/Associative_array)) in which both the key and value types are plain integers. One is a [Judy array](http://judy.sourceforge.net/), and the other is a custom hash table implemented in `hashtable.cpp` and `hashtable.h`.
 
+You can view examples of the generated graphs in the accompanying blog post, [This Hash Table Is Faster Than a Judy Array](http://preshing.com/20130107/this-hash-table-is-faster-than-a-judy-array).
+
 Code is released to the public domain, except for the Judy array implementation which is LGPL.
 
 # Requirements
