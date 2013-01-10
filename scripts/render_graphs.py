@@ -132,12 +132,15 @@ class Graph:
         self.curves = []
         self.smoothing = True
         self.small = False
+        self.xlabelshift = 0
 
     def addSmoothCurve(self, label, color, results, resultName, labelNudge = 0, width = None):
         if resultName not in results:
             print('*** %s is missing' % resultName)
             return
         points = results[resultName]
+        if 'MEMORY' in resultName:
+            points = [(x, y / x) for x, y in points]
         xattribs = self.xattribs
         yattribs = self.yattribs
         points = [(xattribs.toAxis(x), yattribs.toAxis(y)) for x, y in points]
@@ -155,7 +158,7 @@ class Graph:
         if self.small:
             surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 46 + int(xattribs.size + 0.5), 69 + int(yattribs.size + 0.5))
         else:
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 116 + int(xattribs.size + 0.5), 65 + int(yattribs.size + 0.5))
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 116 + int(xattribs.size + 0.5) - self.xlabelshift, 65 + int(yattribs.size + 0.5))
         cr = cairo.Context(surface)
         cr.set_source_rgb(1, 1, 1)
         cr.paint()
@@ -163,7 +166,7 @@ class Graph:
         if self.small:
             cr.translate(40, 26 + yattribs.size)
         else:
-            cr.translate(58, 11 + yattribs.size)
+            cr.translate(58 - self.xlabelshift, 11 + yattribs.size)
 
         # Draw axes
         labelFont = createScaledFont('Arial', 11)
@@ -229,7 +232,7 @@ class Graph:
             cr.set_source_rgb(0, 0, 0)
             axisFont = createScaledFont('Helvetica', 14, weight=cairo.FONT_WEIGHT_BOLD)
             with Saved(cr):
-                cr.translate(-47, -yattribs.size / 2.0)
+                cr.translate(-47 + self.xlabelshift, -yattribs.size / 2.0)
                 cr.rotate(-math.pi / 2)
                 fillAlignedText(cr, 0, 0, axisFont, self.yaxis, 0.5)
             fillAlignedText(cr, xattribs.size / 2.0, 50, axisFont, self.xaxis, 0.5)
@@ -293,24 +296,14 @@ if __name__ == '__main__':
         graph.addSmoothCurve('', (.4, .4, .9), results, 'INSERT_10000_JUDY', width=1.8)
         graph.render()
 
-    graph = Graph('memory.png', 'Memory')
+    graph = Graph('memory.png', 'Total Bytes Per Item')
     if filter.match(graph.filename):
         print('Rendering %s...' % graph.filename)
-        graph.xattribs.size = 210
-        graph.yattribs = AxisAttribs(170, 512, 256*0x100000, 4, True)
-        def MemoryLabeler(x):
-            if x >= 1024**3:
-                return '%d GB' % (x / 1024**3 + 0.5)
-            elif x >= 1024**2:
-                return '%d MB' % (x / 1024**2 + 0.5)
-            elif x >= 1024:
-                return '%d KB' % (x / 1024 + 0.5)
-            else:
-                return '%d' % (x + 0.5)                
-        graph.yattribs.labeler = MemoryLabeler
+        graph.yattribs = AxisAttribs(150, 0, 25, 5, False)
         graph.smoothing = False
-        graph.addSmoothCurve('Hash Table', (1, .4, .4), results, 'MEMORY_TABLE', -5)
-        graph.addSmoothCurve('Judy Array', (.4, .4, .9), results, 'MEMORY_JUDY', 3)
+        graph.xlabelshift = 21
+        graph.addSmoothCurve('Hash Table', (1, .4, .4), results, 'MEMORY_TABLE', -3)
+        graph.addSmoothCurve('Judy Array', (.4, .4, .9), results, 'MEMORY_JUDY')
         graph.render()
     
     print('Elapsed time: %s' % (datetime.now() - start))
